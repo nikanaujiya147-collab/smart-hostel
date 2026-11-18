@@ -1,29 +1,35 @@
 package com.hostel.smarthostel.config;
 
-import java.util.Arrays;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+import java.util.Arrays;
 
 @Configuration
-public class CorsConfig implements WebMvcConfigurer {
-@Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:4173,https://smart-hostel-2rpo.onrender.com}")
-    private String allowedOrigins;
+public class CorsConfig {
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        List<String> origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(origin -> !origin.isEmpty())
-                .toList();
+    @Bean
+    public CorsFilter corsFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        // Explicitly allow your frontend URLs
+        config.setAllowedOrigins(Arrays.asList(
+            "http://localhost:5173", 
+            "https://smart-hostel-2rpo.onrender.com"
+        ));
+        // Allow all standard headers and the Authorization header
+        config.setAllowedHeaders(Arrays.asList(
+            "Origin", "Content-Type", "Accept", "Authorization"
+        ));
+        // Explicitly permit the OPTIONS preflight method
+        config.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
 
-        registry.addMapping("/api/**")
-                .allowedOrigins(origins.toArray(String[]::new))
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("Content-Type", "X-User-Id", "Authorization")
-                .allowCredentials(false)
-                .maxAge(3600);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 }
